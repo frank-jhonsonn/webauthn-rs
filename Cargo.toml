@@ -9,11 +9,11 @@ members = [
     # The actually library.
     "webauthn-rs",
     # Authenticator interactions
-    "webauthn-authenticator-rs",
-    # Tutorial / Example sites.
+    "webauthn-authenticator-rs",                                                                                                                                    
+    # Tutorial / Example sites.                                                                                                                         
     "tutorial/server/tide",
-    "tutorial/server/axum",
-    "tutorial/wasm",
+    "tutorial/server/axum",                                                                                                                                               
+    "tutorial/wasm",           
     # The compat tester
     "compat_tester/webauthn-rs-demo",
     "compat_tester/webauthn-rs-demo-shared",
