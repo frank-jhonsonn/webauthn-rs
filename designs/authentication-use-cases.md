@@ -1,192 +1,110 @@
-# Authentication Use Cases
+# Casos de uso de autenticação
 
-As a technical specification, Webauthn has "many ways" it case be used that *appear* to all be
-valid. However, there is an unwritten set of combinations that are intended, and combinations
-that can both cause confusion to users or allows verification bypasses at worst.
+Como especificação técnica, o Webauthn tem "muitas maneiras" de ser usado que *parece* ser
+válido. No entanto, há um conjunto não escrito de combinações que se destinam, e combinações
+que pode causar confusão aos usuários ou, na pior das hipóteses, permitir desvios de verificação.
 
-This document details the use cases that we support to understand how we should structure our library
-to ensure it can never be used/held incorrectly.
+Este documento detalha os casos de uso aos quais oferecemos suporte para entender como devemos estruturar nossa biblioteca
+para garantir que nunca possa ser usado/mantido incorretamente.
 
-> NOTE: This is not intended to be a simple introduction to webauthn, and will assume extensive prior
-> knowledge.
+> NOTA: Esta não pretende ser uma simples introdução ao webauthn, e assumirá extensa
+> conhecimento.
 
-## Key Terms
+## Termos chave
 
-### Non-discoverable credential
+### Credencial não detectável
 
 [credential-id w3c](https://www.w3.org/TR/webauthn-2/#credential-id)
 
-This is the "common" type of credential that is used. These are commonly implemented with a scheme
-known as "key-wrapped-key". This is where the authenticator has a single private key, and encrypts
-a credential with that key. The credential ID is the encrypted credential.
+Este é o tipo de credencial "comum" que é usado. Estes são comumente implementados com um esquema
+conhecido como "key-wrapped-key". É aqui que o autenticador tem uma única chave privada e criptografa
+uma credencial com essa chave. O ID da credencial é a credencial criptografada.
 
-For the authenticator to then operate, it must be presented with the credential id, that the authenticator
-decrypts and then uses in the authentication ceremony.
+Para que o autenticador então funcione, deve ser apresentado com o id da credencial, que o autenticador
+descriptografa e depois usa na cerimônia de autenticação.
 
-### Discoverable Credentials
+### Credenciais detectáveis
 
-[discoverable credential w3c](https://www.w3.org/TR/webauthn-2/#client-side-discoverable-credential)
+[credencial detectável w3c](https://www.w3.org/TR/webauthn-2/#client-side-discoverable-credential)
 
-A discoverable credential is previously called a resident key. This is when the *client* holds the
-ability to find credentials locally rather than requiring them to be supplied in the allowedCredentials
-set in authentication.
+Uma credencial detectável é anteriormente chamada de chave residente. É quando o *cliente* detém o
+capacidade de encontrar credenciais localmente, em vez de exigir que elas sejam fornecidas no arquivo allowedCredentials
+definido na autenticação.
 
-### User Verification
+### Verificação do usuário
 
-[user verification w3c](https://www.w3.org/TR/webauthn-2/#user-verification)
+[verificação de usuário w3c](https://www.w3.org/TR/webauthn-2/#user-verification)
 
-The process of supplying extra or supplementary authentication to the authenticator. This improves
-the authentication from "there is a person present" to "this specific owner of the authenticator" is
-present. Conseder UV=True as the authenticator is a self container MFA device, where UV=false means that
-the device is a SFA, and other authentication is required to compose a complete MFA.
+O processo de fornecimento de autenticação extra ou suplementar ao autenticador. Isso melhora
+a autenticação de "há uma pessoa presente" para "este proprietário específico do autenticador" é
+presente. Conseder UV=True porque o autenticador é um dispositivo MFA self container, onde UV=false significa que
+o dispositivo é um SFA e outra autenticação é necessária para compor um MFA completo.
 
-At registration we store the policy and verification that was supplied in the internal Credential
-type so that later decisions can be made for security policy.
+No registro armazenamos a política e a verificação que foi fornecida na Credencial interna
+tipo para que decisões posteriores possam ser tomadas para a política de segurança.
 
-### External Knowledege
+### Conhecimento Externo
 
-This is where using elements from the user interaction, workflow, or a device fingerprint, cookie
-or other, the client or RP can make descions about which credential or policy to use before
-the initial webauthn challenge is sent.
+É aqui que o uso de elementos da interação do usuário, fluxo de trabalho ou impressão digital do dispositivo, cookie
+ou outro, o cliente ou RP pode decidir sobre qual credencial ou política usar antes
+o desafio inicial do webauthn é enviado.
 
-This work flow could be a user login page that requests "how" the user wishes to authenticate,
-which device they want to use. It could also be based on the device ID and understanding that
-the authenticator is part of the device, so we should prefer it's use.
+Este fluxo de trabalho pode ser uma página de login do usuário que solicita "como" o usuário deseja autenticar,
+qual dispositivo eles querem usar. Também pode se basear no ID do dispositivo e entender que
+o autenticador faz parte do dispositivo, por isso devemos dar preferência ao seu uso.
 
-## Authentication Work Flows
+## Fluxos de trabalho de autenticação
 
-### Homogenous Non-Discoverable Credentials
+### Credenciais homogêneas não detectáveis
 
-This is a set of credentials with a homogeneous UV policy - either all discouraged or all required.
+Este é um conjunto de credenciais com uma política UV homogênea - todas desencorajadas ou todas necessárias.
 
-This policy is derived from the set of UV=true/false flags in the allow credential list. If the
-UV flags are inconsistent an error is raised.
+Essa política é derivada do conjunto de sinalizadores UV=true/false na lista de credenciais de permissão. Se o
+Os sinalizadores UV são inconsistentes e um erro é gerado.
 
-In the case all of these credentials are discouraged, we still assert that the UV bit matches
-the returned authentication as it *is* valid for UV=true even when discouraged and we store that
-in the credential.
+No caso de todas essas credenciais serem desencorajadas, ainda afirmamos que o bit UV corresponde
+a autenticação retornada, pois *é* válida para UV=true mesmo quando desencorajada e nós armazenamos isso
+na credencial.
 
-#### Example
+#### Exemplo
 
-A laptop where the user has multiple UV=false yubikeys that may be used as a authentication factor.
+Um laptop em que o usuário possui várias yubikeys UV=false que podem ser usadas como fator de autenticação.
 
-A user indicates they want to authenticate with their touchid as a self contained MFA. The user owns
-and has enrolled multiple devices that have TouchID so any of them could be the credential in use
-without external knowledge.
+Um usuário indica que deseja autenticar com seu touchid como um MFA independente. O usuário possui
+e registrou vários dispositivos que possuem TouchID para que qualquer um deles possa ser a credencial em uso
+sem conhecimento externo.
 
-#### Detailed Example
+#### Exemplo detalhado
 
-This has many interactions with the UV policy at registration, and what the resulting states and outcomes
-are.
+Isso tem muitas interações com a política de UV no registro e quais os estados e resultados resultantes
+são.
 
-| UV Policy | UV boolean returned | Valid UV Policies for Auth | UV boolean always checked in auth |
+| Política UV | UV booleano retornado | Políticas UV válidas para autenticação | Boolean UV sempre verificado na autenticação |
 | --------- | ------------------- | -------------------------- | --------------------------------- |
-| discouraged | false             | discouraged                | No - device can not do UV |
-| discouraged | true              | discouraged, required      | Yes - device always does UV |
-| preferred   | false             | discouraged                | No - device can not do UV |
-| preferred   | true              | discouraged, required      | No - device may not always send UV in discouraged mode |
-| required    | false             | -                          | No - device can not be used |
-| required    | true              | required                   | Yes - device should always performs UV |
+| desanimado | falso | desanimado | Não - o dispositivo não pode fazer UV |
+| desanimado | verdadeiro | desencorajado, exigido | Sim - o dispositivo sempre faz UV |
+| preferencial | falso | desanimado | Não - o dispositivo não pode fazer UV |
+| preferencial | verdadeiro | desencorajado, exigido | Não - o dispositivo pode nem sempre enviar UV no modo desencorajado |
+| necessário | falso | - | Não - o dispositivo não pode ser usado |
+| necessário | verdadeiro | necessário | Sim - o dispositivo deve sempre executar UV |
 
-From these we can then construct some possible scenarioes.
+A partir deles podemos então construir alguns cenários possíveis.
 
-##### Scenario 1
+##### Cenário 1
 
-* Registration Policy = discouraged.
-* One yubikey which does not have a pin.
-* TouchID
+* Política de registro = desencorajado.
+* Um yubikey que não possui pin.
+* Touch ID
 
-During an authentication with policy discouraged we can check:
+Durante uma autenticação com política desencorajada, podemos verificar:
 
-* The yubikey sends UV false
-* The touchID sends UV true due to the registration policy = discouraged + uv true flag.
+* O yubikey envia UV falso
+* O touchID envia UV true devido à política de registro = desencorajado + uv true flag.
 
-If we perform an authentication with policy required, only the TouchID device could participate. We would then
-assert UV=true
+Se realizarmos uma autenticação com política exigida, somente o dispositivo TouchID poderá participar. Nós então
+afirmar UV=true
 
-##### Scenario 2
+##### Cenário 2
 
-* Registration Policy = preferred
-* One yubikey which does not have a pin.
-* TouchID
-
-During an authentication with policy discouraged we can check:
-
-* The yubikey sends UV false.
-* The touchID UV flag is ignored since we do not know if the device always sends UV true.
-
-If we perform an authentication with policy required, only the TouchID device could participate. We would
-then assert UV=true
-
-HINT: This is why preferred is bad :) it's not clear what it means.
-
-##### Scenario 3
-
-* Registration Policy = required
-* One yubikey which DOES have a pin.
-* TouchID
-
-During an authentication with policy required we can check:
-
-* The yubikey sends UV true
-* The touchID sends UV true.
-
-We could not perform authentication with UV discouraged as this would violate the assumption the user
-held at registration that the device always requires verification.
-
-### Single Credential Non-Discoverable with UV Policy Override
-
-If external knowledge is provided about which credential is intended to be used, we can have a credential's
-requirements for verification temporarily overriden. This can be to remove the UV requirement, or
-to temporarily require it.
-
-#### Example
-
-Using a yubikey with pin as an MFA device, after login is used for privilege escalation where we only
-need to assert a single factor (presence) at they are already authenticated.
-
-#### Warning
-
-This method does mean that the assumptions of the user around the devices verification state are
-potentially violated as the user may or may not know under what conditions the UV is required
-or not. It's probably better to always use the same policy as existed at registration for
-the associated device.
-
-
-### Single Credential Discoverable with UV Policy Override
-
-With device specific information we can use a discoverable credential with policy override if required.
-This could be considered as a device specific credential / authentication mechanism.
-
-The other elements of "Single Credential Non-Discoverable with UV Policy Override" remain.
-
-#### Example
-
-A longer term cookie on the device, or the device finger print indicates to the server that we can
-use a discoverable credential from that device.
-
-#### Detailed Example
-
-The user registers their devices touchid with UV true as a discoverable credential. A cookie is sent
-to the device that identifies this device for future authentications as belonging to this user and
-this credential association.
-
-During authentication the presence of this cookie allows us to pre-select that this devices possible
-credentials could be used. We send empty allowCredentials, but internally we select the set of
-related discoverable credentials for the user. We validate that the supplied credential is one
-of the selected credentials and passes UV as required.
-
-If the devices cookie store is cleared, we may offer the user to re-associate the device id with
-that set of authenticators to generate that cookie.
-
-## Work flows that may not be relevant?
-
-### Homogenous Discoverable Credentials
-
-As a discoverable credential we already required external knowledge of what credential will be used
-so does it become needed to have many discoverable credentials in one transaction?
-
-## Questions?
-
-* Can we assert that the returned key truly is discoverable after a registration so that we can store this boolean?
-* In registration does UV=preferred, if we get UV=true, do we consider this credential to have been registerd under "required"?
+* Política de registro = preferencial
+* Um
