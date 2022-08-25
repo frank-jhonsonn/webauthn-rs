@@ -1,121 +1,117 @@
-
 Webauthn-rs
 ==========
 
-Webauthn is a modern approach to hardware based authentication, consisting of
-a user with an authenticator device, a browser or client that interacts with the
-device, and a server that is able to generate challenges and verify the
-authenticator's validity.
+Webauthn é uma abordagem moderna para autenticação baseada em hardware, consistindo em
+um usuário com um dispositivo autenticador, um navegador ou cliente que interage com o
+dispositivo, e um servidor capaz de gerar desafios e verificar a
+validade do autenticador.
 
-Users are able to enroll their own tokens through a registration process to
-be associated to their accounts, and then are able to login using the token
-which performas a cryptographic authentication.
+Os usuários podem registrar seus próprios tokens por meio de um processo de registro para
+ser associados às suas contas e, em seguida, podem fazer login usando o token
+que atua como uma autenticação criptográfica.
 
-This library aims to provide useful functions and frameworks allowing you to
-integrate webauthn into Rust web servers. This means the library implements the
-Relying Party component of the FIDO2 workflow. We provide template and
-example javascript and wasm bindings to demonstrate the browser interactions required.
+Esta biblioteca tem como objetivo fornecer funções e frameworks úteis, permitindo que você
+integre webauthn em servidores web Rust. Isso significa que a biblioteca implementa o
+Componente de terceira parte confiável do fluxo de trabalho FIDO2. Fornecemos modelo e
+exemplos de ligações javascript e wasm para demonstrar as interações do navegador necessárias.
 
-Documentation
+Documentação
 -------------
 
-This library consists of two major parts.
+Esta biblioteca consiste em duas partes principais.
 
-A safe, use-case driven api, which is defined in [Webauthn-RS](https://docs.rs/webauthn-rs/)
+Uma API segura e orientada a casos de uso, que é definida em [Webauthn-RS](https://docs.rs/webauthn-rs/)
 
-The low level, protocol level interactions which is defined in [Webauthn-Core-RS](https://docs.rs/webauthn-core-rs/)
+As interações de nível de protocolo de baixo nível que são definidas em [Webauthn-Core-RS](https://docs.rs/webauthn-core-rs/)
 
-We strongly recommend you use the safe api, as webauthn has many sharp edges and ways to hold it wrong!
+É altamente recomendável que você use a API segura, pois o webauthn tem muitas arestas afiadas e maneiras de segurá-lo errado!
 
-Demonstration
+Demonstração
 -------------
 
-You can test this library via our [demonstration site](https://webauthn.firstyear.id.au/)
+Você pode testar esta biblioteca em nosso [site de demonstração](https://webauthn.firstyear.id.au/)
 
-Or you can run the demonstration your self locally with:
+Ou você pode executar a demonstração localmente com:
 
     cd demo_site/webauthn-rs-demo
-    cargo run
+    corrida de carga
 
-For additional configuration options:
+Para opções de configuração adicionais:
 
-    cargo run -- --help
+    corrida de carga -- --help
 
-Known Supported Keys/Harwdare
+Chaves Suportadas Conhecidas/Harwdare
 -----------------------------
 
-We have extensively tested a variety of keys and devices, not limited to:
+Testamos extensivamente uma variedade de chaves e dispositivos, não limitados a:
 
 * Yubico 5c / 5ci / FIPS / Bio
 * TouchID / FaceID (iPhone, iPad, MacBook Pro)
-* Android
+*Android
 * Windows Hello (TPM)
 * Softtokens
 
-If your key/browser combination don't work (generally due to missing crypto routines)
-please conduct a [compatability test](https://webauthn.firstyear.id.au/compat_test) and then open
-an issue so that we can resolve the issue!
+Se sua combinação de chave/navegador não funcionar (geralmente devido à falta de rotinas de criptografia)
+faça um [teste de compatibilidade](https://webauthn.firstyear.id.au/compat_test) e abra
+um problema para que possamos resolver o problema!
 
-Known BROKEN Keys/Harwdare
+Chaves QUEBRADAS/Harwdare conhecidas
 --------------------------
 
-### Broken
+### Quebrado
 
-* Pixel 3a / Pixel 4 + Chrome - Does not send correct attestation certificates,
-  and ignores requested algorithms. Not resolved.
-* Windows Hello with Older TPMs - Often use RSA-SHA1 signatures over attestation which may allow credential compromise/falsification.
+* Pixel 3a / Pixel 4 + Chrome - Não envia certificados de atestado corretos,
+  e ignora os algoritmos solicitados. Não resolvido.
+* Windows Hello com TPMs mais antigos - geralmente usam assinaturas RSA-SHA1 em vez de atestado, o que pode permitir comprometimento/falsificação de credenciais.
 
-### Fixed
+### Fixo
 
-* Windows 10 / Windows 11 + Firefox 98 - When aaguid is meant
-  to be 16 bytes of 0, it emits a single 0 byte. This should be resolved as of 2022-04-17
-* BUG in Safari, NOT Apple Passkeys (was: passkeys do not identify themself as a transferable credential, and should be considered to be floating.)
+* Windows 10 / Windows 11 + Firefox 98 - Quando se refere a aaguid
+  para ser 16 bytes de 0, ele emite um único byte 0. Isso deve ser resolvido a partir de 17/04/2022
+* BUG no Safari, NÃO Apple Passkeys (era: as senhas não se identificam como uma credencial transferível e devem ser consideradas flutuantes.)
 
-Standards Compliance
+Conformidade com os padrões
 --------------------
 
-This library has been carefully implemented to follow the w3c standard for webauthn level 3 processing
-to ensure secure and correct behaviour. We support most major extensions and key types, but we do not claim
-to be standards complaint because:
+Esta biblioteca foi cuidadosamente implementada para seguir o padrão w3c para processamento webauthn nível 3
+para garantir um comportamento seguro e correto. Apoiamos a maioria das principais extensões e tipos de chave, mas não reivindicamos
+para ser reclamação de padrões porque:
 
-* We have enforced extra constraints in the library that go above and beyond the security guarantees the standard offers.
-* We do not support certain esoteric options.
-* We do not support all cryptographic primitive types (only limited to secure ones).
-* A large number of advertised features in webauthn do not function in the real world.
+* Aplicamos restrições extras na biblioteca que vão além das garantias de segurança oferecidas pelo padrão.
+* Não oferecemos suporte a certas opções esotéricas.
+* Não suportamos todos os tipos primitivos criptográficos (apenas limitados aos seguros).
+* Um grande número de recursos anunciados no webauthn não funciona no mundo real.
 
-This library has passed a security audit performed by SUSE product security. Other security reviews
-are welcome!
+Esta biblioteca foi aprovada em uma auditoria de segurança realizada pela segurança do produto SUSE. Outras revisões de segurança
+são bem-vindos!
 
-Feedback
+Comentários
 --------
 
-The current design of the library is open to feedback on how it
-can be improved - please use this library and contact the project on what can be
-improved!
+O design atual da biblioteca está aberto a comentários sobre como
+pode ser melhorado - por favor use esta biblioteca e entre em contato com o projeto sobre o que pode ser
+melhorou!
 
-Why OpenSSL?
+Por que OpenSSL?
 ------------
 
-A question I expect is why OpenSSL rather than some other pure-Rust cryptographic
-providers. There are two major justfications.
+Uma pergunta que espero é por que o OpenSSL em vez de algum outro criptográfico puro-ferrugem
+provedores. Há duas justificativas principais.
 
-The first is that if this library will be used in corporate or major deployments,
-then cryptographic audits may have to be performed. It is much easier to point
-toward OpenSSL which has already undergone much more review and auditing than
-using a series of Rust crates which (while still great!) have not seen the same
-level of scrutiny.
+A primeira é que, se essa biblioteca for usada em implantações corporativas ou de grande porte,
+então pode ser necessário realizar auditorias criptográficas. É muito mais fácil apontar
+em direção ao OpenSSL, que já passou por muito mais revisão e auditoria do que
+usando uma série de caixas de ferrugem que (embora ainda sejam ótimas!)
+nível de fiscalização.
 
-The second is that OpenSSL is the only library I have found that allows us to
-reconstruct an EC public key from its X/Y points or an RSA public key from its
-n/e for use with signature verification.
-Without this, we are not able to parse authenticator credentials to perform authentication.
+A segunda é que o OpenSSL é a única biblioteca que encontrei que nos permite
+reconstruir uma chave pública EC a partir de seus pontos X/Y ou uma chave pública RSA a partir de seus pontos
+n/e para uso com verificação de assinatura.
+Sem isso, não podemos analisar as credenciais do autenticador para realizar a autenticação.
 
-Resources
+Recursos
 ---------
 
-* Specification: https://www.w3.org/TR/webauthn-3
-* JSON details: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-server-v2.0-rd-20180702.html
-* Write up on interactions: https://medium.com/@herrjemand/introduction-to-webauthn-api-5fd1fb46c285
-
-
-
+* Especificação: https://www.w3.org/TR/webauthn-3
+* Detalhes JSON: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-server-v2.0-rd-20180702.html
+* Anote as interações: https://medium.com/@herrjemand/introduction-to-webauthn-api-5fd1fb46c285
